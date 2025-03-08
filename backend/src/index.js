@@ -11,6 +11,7 @@ import connectDB from './config/db.js';
 import pinRoutes from './routes/pins.js';
 import userRoutes from './routes/users.js';
 import boardRoutes from './routes/boards.js';
+import commentRoutes from './routes/comments.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use(cookieParser());
 app.use('/api/v1/pins', pinRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/boards', boardRoutes);
+app.use('/api/v1/comments', commentRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

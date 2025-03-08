@@ -1,8 +1,6 @@
 import Pin from '../models/Pin.js';
 
-// @desc    Get all pins with filtering, sorting, and pagination
-// @route   GET /api/v1/pins
-// @access  Public
+
 export const getAllPins = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;

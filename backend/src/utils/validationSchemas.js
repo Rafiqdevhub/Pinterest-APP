@@ -17,3 +17,9 @@ export const pinSchema = Joi.object({
   description: Joi.string().required(),
   imageUrl: Joi.string().uri().required(),
 });
+
+export const boardSchema = Joi.object({
+  title: Joi.string().min(1).max(50).required(),
+  description: Joi.string().max(500),
+  isPrivate: Joi.boolean()
+});
