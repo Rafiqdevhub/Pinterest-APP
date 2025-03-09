@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import "./LeftBar.css";
+import "./leftBar.css";
 
 const LeftBar = () => {
   return <div className="leftBar">hello from LeftBar</div>;
