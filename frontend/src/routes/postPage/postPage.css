@@ -14,16 +14,12 @@
 }
 
 .postImg {
-  /* FIXED: IMAGE */
-  /* flex: 1; */
   background-color: #c8bcaf;
 }
 
 .postImg img {
   width: 100%;
   height: 100%;
-  /* FIXED: IMAGE */
-  /* object-fit: cover; */
   object-fit: contain;
 }
 

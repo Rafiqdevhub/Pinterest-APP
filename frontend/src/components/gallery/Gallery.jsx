@@ -3,10 +3,11 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import GalleryItems from "../galleryItem/GalleryItems";
 import "./gallery.css";
 import axios from "axios";
+import Skeleton from "../skeleton/Skeleton";
 
 const fetchPins = async ({ pageParam, search, userId, boardId }) => {
   const res = await axios.get(
-    `${import.meta.env.VITE_API_ENDPOINT}/pins?cursor=${pageParam}&search=${
+    `${import.meta.env.VITE_URL_IK_ENDPOINT}/pins?cursor=${pageParam}&search=${
       search || ""
     }&userId=${userId || ""}&boardId=${boardId || ""}`
   );
@@ -14,14 +15,15 @@ const fetchPins = async ({ pageParam, search, userId, boardId }) => {
 };
 const Gallery = ({ search, userId, boardId }) => {
   const { data, fetchNextPage, hasNextPage, status } = useInfiniteQuery({
-    // queryKey: ["pins"],
-    // FIXED QUERY KEY
     queryKey: ["pins", search, userId, boardId],
     queryFn: ({ pageParam = 0 }) =>
       fetchPins({ pageParam, search, userId, boardId }),
     initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
+
+  if (status === "pending") return <Skeleton />;
+  if (status === "error") return "Something went wrong...";
 
   const allPins = data?.pages?.flatMap((page) => page.data) || [];
 
