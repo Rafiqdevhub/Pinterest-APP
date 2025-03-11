@@ -1,8 +1,8 @@
 import "./comments.css";
 import { useQuery } from "@tanstack/react-query";
-import apiRequest from "../../utils/apiRequest";
 import Comment from "./comment";
 import CommentForm from "./commentForm";
+import apiRequest from "../../utils/apiRequest";
 
 const Comments = ({ id }) => {
   const { isPending, error, data } = useQuery({

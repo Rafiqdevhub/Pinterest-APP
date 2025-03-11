@@ -1,9 +1,9 @@
 import "./boards.css";
 import Image from "../image/image";
 import { useQuery } from "@tanstack/react-query";
-import apiRequest from "../../utils/apiRequest";
 import { format } from "timeago.js";
 import { Link } from "react-router";
+import apiRequest from "../../utils/apiRequest";
 
 const Boards = ({ userId }) => {
   const { isPending, error, data } = useQuery({
