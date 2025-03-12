@@ -7,9 +7,7 @@ import Skeleton from "../skeleton/Skeleton";
 
 const fetchPins = async ({ pageParam, search, userId, boardId }) => {
   const res = await axios.get(
-    `${import.meta.env.VITE_URL_IK_ENDPOINT}/pins?cursor=${pageParam}&search=${
-      search || ""
-    }&userId=${userId || ""}&boardId=${boardId || ""}`
+    `${import.meta.env.VITE_API_ENDPOINT}/api/v1/pins`
   );
   return res.data;
 };

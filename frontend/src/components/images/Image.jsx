@@ -1,26 +1,9 @@
 import { IKImage } from "imagekitio-react";
 
 const Image = ({ path, src, alt, className, w, h }) => {
-  const endpoint = import.meta.env.VITE_URL_IK_ENDPOINT;
-
-  if (!path && !src) {
-    return null;
-  }
-
-  if (!endpoint) {
-    return (
-      <img
-        src={path || src || null}
-        alt={alt}
-        className={className}
-        style={{ width: w, height: h }}
-      />
-    );
-  }
-
   return (
     <IKImage
-      urlEndpoint={endpoint}
+      urlEndpoint={import.meta.env.VITE_URL_IK_ENDPOINT}
       path={path}
       src={src}
       transformation={[

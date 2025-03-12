@@ -1,7 +1,7 @@
-import Image from "../image/image";
 import "./postInteractions.css";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiRequest from "../../utils/apiRequest";
+import Image from "../images/Image";
 
 const interact = async (id, type) => {
   const res = await apiRequest.post(`/pins/interact/${id}`, { type });

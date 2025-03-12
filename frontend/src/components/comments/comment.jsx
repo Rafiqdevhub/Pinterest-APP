@@ -1,5 +1,5 @@
-import Image from "../image/image";
 import { format } from "timeago.js";
+import Image from "../images/Image";
 
 const Comment = ({ comment }) => {
   return (
