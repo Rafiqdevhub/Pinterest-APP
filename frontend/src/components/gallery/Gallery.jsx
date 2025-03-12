@@ -2,22 +2,31 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import InfiniteScroll from "react-infinite-scroll-component";
 import GalleryItems from "../galleryItem/GalleryItems";
 import "./gallery.css";
-import axios from "axios";
+import apiRequest from "../../utils/apiRequest";
 import Skeleton from "../skeleton/Skeleton";
 
-const fetchPins = async ({ pageParam, search, userId, boardId }) => {
-  const res = await axios.get(
-    `${import.meta.env.VITE_API_ENDPOINT}/api/v1/pins`
-  );
+const fetchPins = async ({ pageParam = 0, search, userId, boardId }) => {
+  const queryParams = new URLSearchParams({
+    page: pageParam + 1,
+    ...(search && { search }),
+    ...(userId && { userId }),
+    ...(boardId && { boardId }),
+  });
+
+  const res = await apiRequest.get(`/api/v1/pins?${queryParams}`);
   return res.data;
 };
+
 const Gallery = ({ search, userId, boardId }) => {
   const { data, fetchNextPage, hasNextPage, status } = useInfiniteQuery({
     queryKey: ["pins", search, userId, boardId],
-    queryFn: ({ pageParam = 0 }) =>
+    queryFn: ({ pageParam }) =>
       fetchPins({ pageParam, search, userId, boardId }),
     initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage
+        : undefined,
   });
 
   if (status === "pending") return <Skeleton />;

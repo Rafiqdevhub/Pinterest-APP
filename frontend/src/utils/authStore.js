@@ -1,5 +1,9 @@
 import { create } from "zustand";
 
-const userAuthStore = create();
+const useAuthStore = create((set) => ({
+  currentUser: null,
+  setCurrentUser: (user) => set({ currentUser: user }),
+  removeCurrentUser: () => set({ currentUser: null }),
+}));
 
-export default userAuthStore;
+export default useAuthStore;

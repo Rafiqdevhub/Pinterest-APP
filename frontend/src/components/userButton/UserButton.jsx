@@ -1,8 +1,7 @@
 import "./userButton.css";
 import { useState } from "react";
-import "./userButton.css";
 import apiRequest from "../../utils/apiRequest";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../utils/authStore";
 import Image from "../images/Image";
 
@@ -13,11 +12,9 @@ const UserButton = () => {
 
   const { currentUser, removeCurrentUser } = useAuthStore();
 
-  console.log(currentUser);
-
   const handleLogout = async () => {
     try {
-      await apiRequest.post("/users/auth/logout", {});
+      await apiRequest.post("/api/v1/users/logout", {});
       removeCurrentUser();
       navigate("/auth");
     } catch (err) {

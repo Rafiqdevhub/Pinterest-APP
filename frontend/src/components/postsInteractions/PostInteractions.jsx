@@ -3,9 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiRequest from "../../utils/apiRequest";
 import Image from "../images/Image";
 
-const interact = async (id, type) => {
-  const res = await apiRequest.post(`/pins/interact/${id}`, { type });
-
+const interact = async ({ id, type }) => {
+  const res = await apiRequest.post(`/api/v1/pins/${id}/${type}`);
   return res.data;
 };
 
@@ -13,7 +12,7 @@ const PostInteractions = ({ postId }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ({ id, type }) => interact(id, type),
+    mutationFn: interact,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["interactionCheck", postId] });
     },
@@ -23,7 +22,7 @@ const PostInteractions = ({ postId }) => {
     queryKey: ["interactionCheck", postId],
     queryFn: () =>
       apiRequest
-        .get(`/pins/interaction-check/${postId}`)
+        .get(`/api/v1/pins/interaction-check/${postId}`)
         .then((res) => res.data),
   });
 

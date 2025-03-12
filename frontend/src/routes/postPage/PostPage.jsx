@@ -1,5 +1,5 @@
 import "./postPage.css";
-import { Link, useParams } from "react-router";
+import { Link, useParams } from "react-router-dom";
 import Comments from "../../components/comments/comments";
 import { useQuery } from "@tanstack/react-query";
 import apiRequest from "../../utils/apiRequest";
@@ -45,7 +45,7 @@ const PostPage = () => {
             <Image path={userImg} alt={displayName} />
             <span>{displayName}</span>
           </Link>
-          <Comments id={data._id} />
+          <Comments id={id} />
         </div>
       </div>
     </div>

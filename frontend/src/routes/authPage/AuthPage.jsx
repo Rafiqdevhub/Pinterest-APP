@@ -1,7 +1,7 @@
 import "./authPage.css";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import userAuthStore from "../../utils/authStore";
+import useAuthStore from "../../utils/authStore";
 import apiRequest from "../../utils/apiRequest";
 import Image from "../../components/images/Image";
 
@@ -11,27 +11,34 @@ const AuthPage = () => {
 
   const navigate = useNavigate();
 
-  const { setCurrentUser } = userAuthStore();
+  const { setCurrentUser } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     const formData = new FormData(e.target);
-
     const data = Object.fromEntries(formData);
 
     try {
       const res = await apiRequest.post(
-        `/users/auth/${isRegister ? "register" : "login"}`,
+        `/api/v1/users/${isRegister ? "register" : "login"}`,
         data
       );
 
-      setCurrentUser(res.data);
-
-      navigate("/");
+      if (res.data && res.data.data) {
+        setCurrentUser(res.data.data);
+        navigate("/");
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err) {
-      setError(err.response.data.message);
+      console.error("Login error:", err);
+      setError(
+        err.response?.data?.message || "An error occurred during authentication"
+      );
     }
   };
+
   return (
     <div className="authPage">
       <div className="authContainer">

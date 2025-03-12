@@ -1,5 +1,6 @@
-import Pin from '../models/Pin.js';
-
+import Pin from "../models/Pin.js";
+import Like from "../models/likeModel.js";
+import Save from "../models/saveModel.js";
 
 export const getAllPins = async (req, res) => {
   try {
@@ -9,20 +10,20 @@ export const getAllPins = async (req, res) => {
 
     // Build query
     const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(field => delete queryObj[field]);
+    const excludedFields = ["page", "sort", "limit", "fields"];
+    excludedFields.forEach((field) => delete queryObj[field]);
 
     // Advanced filtering
     let query = Pin.find(queryObj)
-      .populate('creator', 'username img displayName')
-      .populate('comments.createdBy', 'username img displayName');
+      .populate("creator", "username img displayName")
+      .populate("comments.createdBy", "username img displayName");
 
     // Sorting
     if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
+      const sortBy = req.query.sort.split(",").join(" ");
       query = query.sort(sortBy);
     } else {
-      query = query.sort('-createdAt');
+      query = query.sort("-createdAt");
     }
 
     // Pagination
@@ -31,22 +32,22 @@ export const getAllPins = async (req, res) => {
     // Execute query
     const [pins, total] = await Promise.all([
       query,
-      Pin.countDocuments(queryObj)
+      Pin.countDocuments(queryObj),
     ]);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       results: pins.length,
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      data: pins
+      data: pins,
     });
   } catch (err) {
-    res.status(500).json({ 
-      status: 'error',
-      message: 'Error fetching pins',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    res.status(500).json({
+      status: "error",
+      message: "Error fetching pins",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -57,25 +58,25 @@ export const getAllPins = async (req, res) => {
 export const getPin = async (req, res) => {
   try {
     const pin = await Pin.findById(req.params.id)
-      .populate('creator', 'username img displayName')
-      .populate('comments.createdBy', 'username img displayName');
+      .populate("creator", "username img displayName")
+      .populate("comments.createdBy", "username img displayName");
 
     if (!pin) {
       return res.status(404).json({
-        status: 'fail',
-        message: 'Pin not found'
+        status: "fail",
+        message: "Pin not found",
       });
     }
 
     res.status(200).json({
-      status: 'success',
-      data: pin
+      status: "success",
+      data: pin,
     });
   } catch (err) {
     res.status(500).json({
-      status: 'error',
-      message: 'Error fetching pin',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      status: "error",
+      message: "Error fetching pin",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -87,18 +88,18 @@ export const createPin = async (req, res) => {
   try {
     const newPin = await Pin.create({
       ...req.body,
-      creator: req.user._id
+      creator: req.user._id,
     });
 
     res.status(201).json({
-      status: 'success',
-      data: newPin
+      status: "success",
+      data: newPin,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: 'Error creating pin',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      status: "fail",
+      message: "Error creating pin",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -109,11 +110,11 @@ export const createPin = async (req, res) => {
 export const toggleSavePin = async (req, res) => {
   try {
     const pin = await Pin.findById(req.params.id);
-    
+
     if (!pin) {
       return res.status(404).json({
-        status: 'fail',
-        message: 'Pin not found'
+        status: "fail",
+        message: "Pin not found",
       });
     }
 
@@ -122,21 +123,19 @@ export const toggleSavePin = async (req, res) => {
       ? { $pull: { saves: req.user._id } }
       : { $addToSet: { saves: req.user._id } };
 
-    const updatedPin = await Pin.findByIdAndUpdate(
-      req.params.id,
-      update,
-      { new: true }
-    );
+    const updatedPin = await Pin.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+    });
 
     res.status(200).json({
-      status: 'success',
-      data: updatedPin
+      status: "success",
+      data: updatedPin,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: 'Error updating pin',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      status: "fail",
+      message: "Error updating pin",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
@@ -147,34 +146,104 @@ export const toggleSavePin = async (req, res) => {
 export const addComment = async (req, res) => {
   try {
     const pin = await Pin.findById(req.params.id);
-    
+
     if (!pin) {
       return res.status(404).json({
-        status: 'fail',
-        message: 'Pin not found'
+        status: "fail",
+        message: "Pin not found",
       });
     }
 
     const comment = {
       text: req.body.text,
-      createdBy: req.user._id
+      createdBy: req.user._id,
     };
 
     pin.comments.push(comment);
     await pin.save();
 
-    const populatedPin = await Pin.findById(pin._id)
-      .populate('comments.createdBy', 'username img displayName');
+    const populatedPin = await Pin.findById(pin._id).populate(
+      "comments.createdBy",
+      "username img displayName"
+    );
 
     res.status(200).json({
-      status: 'success',
-      data: populatedPin
+      status: "success",
+      data: populatedPin,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: 'Error adding comment',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      status: "fail",
+      message: "Error adding comment",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
+export const checkInteractions = async (req, res) => {
+  try {
+    const pinId = req.params.id;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.json({
+        isLiked: false,
+        isSaved: false,
+        likeCount: 0,
+      });
+    }
+
+    const [likeCount, isLiked, isSaved] = await Promise.all([
+      Like.countDocuments({ pin: pinId }),
+      Like.exists({ pin: pinId, user: userId }),
+      Save.exists({ pin: pinId, user: userId }),
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      isLiked: !!isLiked,
+      isSaved: !!isSaved,
+      likeCount,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message: "Error checking interactions",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
+export const toggleLike = async (req, res) => {
+  try {
+    const pinId = req.params.id;
+    const userId = req.user._id;
+
+    const pin = await Pin.findById(pinId);
+    if (!pin) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Pin not found",
+      });
+    }
+
+    const existingLike = await Like.findOne({ pin: pinId, user: userId });
+
+    if (existingLike) {
+      await Like.deleteOne({ _id: existingLike._id });
+    } else {
+      await Like.create({ pin: pinId, user: userId });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: existingLike ? "Like removed" : "Pin liked",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message: "Error toggling like",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };

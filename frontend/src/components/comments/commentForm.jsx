@@ -4,7 +4,9 @@ import apiRequest from "../../utils/apiRequest";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const addComment = async (comment) => {
-  const res = await apiRequest.post("/comments", comment);
+  const res = await apiRequest.post(`/api/v1/comments/pin/${comment.pin}`, {
+    description: comment.description,
+  });
   return res.data;
 };
 
