@@ -7,7 +7,7 @@ import MainLayout from "./routes/layout/MainLayout.jsx";
 
 const Homepage = React.lazy(() => import("./routes/homepage/homepage"));
 const CreatePage = React.lazy(() => import("./routes/createPage/createPage"));
-const PostPage = React.lazy(() => import("./routes/postPage/postPage"));
+const PostPage = React.lazy(() => import("./routes/postPage/PostPage.jsx"));
 const ProfilePage = React.lazy(() =>
   import("./routes/profilePage/profilePage")
 );
