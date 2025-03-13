@@ -57,8 +57,3 @@ Make sure you have the following installed on your machine:
     - `App.jsx`: The main component of the application
     - `main.jsx`: The entry point of the application
     - `app.css`: The main stylesheet of the application
-
-## License
-
-This project is licensed under the MIT License.
-
