@@ -41,7 +41,7 @@ const PostPage = () => {
         </div>
         <div className="postDetails">
           <PostInteractions postId={id} />
-          <Link to={`/${username}`} className="postUser">
+          <Link to={`/profile/${username}`} className="postUser">
             <Image path={userImg} alt={displayName} />
             <span>{displayName}</span>
           </Link>

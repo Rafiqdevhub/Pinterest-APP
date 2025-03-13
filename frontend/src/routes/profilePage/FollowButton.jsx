@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import apiRequest from "../../utils/apiRequest";
 
 const followUser = async (username) => {
-  const res = await apiRequest.post(`/users/follow/${username}`);
+  const res = await apiRequest.post(`/api/v1/users/${username}/follow`);
   return res.data;
 };
 

@@ -1,12 +1,12 @@
 import "./profilePage.css";
-import Image from "../../components/image/image";
 import { useState } from "react";
-import Gallery from "../../components/gallery/gallery";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import apiRequest from "../../utils/apiRequest";
 import FollowButton from "./FollowButton";
 import Boards from "../../components/boards/Boards";
+import Image from "../../components/images/Image";
+import Gallery from "../../components/gallery/Gallery";
 
 const ProfilePage = () => {
   const [type, setType] = useState("saved");
@@ -15,7 +15,8 @@ const ProfilePage = () => {
 
   const { isPending, error, data } = useQuery({
     queryKey: ["profile", username],
-    queryFn: () => apiRequest.get(`/users/${username}`).then((res) => res.data),
+    queryFn: () =>
+      apiRequest.get(`/api/v1/users/${username}`).then((res) => res.data),
   });
 
   if (isPending) return "Loading...";

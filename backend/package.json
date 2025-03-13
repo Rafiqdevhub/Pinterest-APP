@@ -5,26 +5,37 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "seed": "node src/utils/seed.js"
+    "start": "node --max-old-space-size=4096 src/index.js",
+    "dev": "nodemon --max-old-space-size=4096 src/index.js",
+    "seed": "node src/utils/seed.js",
+    "profile": "node --prof src/index.js",
+    "benchmark": "autocannon -c 100 -d 40 -p 10 localhost:5000/api/v1/pins"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.17.1",
+    "express-fileupload": "^1.5.1",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "hpp": "^0.2.3",
+    "imagekit": "^6.0.0",
+    "ioredis": "^5.6.0",
     "joi": "^17.12.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^5.12.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
+    "autocannon": "^7.15.0",
     "nodemon": "^2.0.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

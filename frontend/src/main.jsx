@@ -25,8 +25,9 @@ createRoot(document.getElementById("root")).render(
             <Route path="/" element={<Homepage />} />
             <Route path="/create" element={<CreatePage />} />
             <Route path="/pin/:id" element={<PostPage />} />
-            <Route path="/:username" element={<ProfilePage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/profile/:username" element={<ProfilePage />} />
+            {/* Moved username route to be more specific */}
           </Route>
           <Route path="/auth" element={<AuthPage />} />
         </Routes>

@@ -1,6 +1,19 @@
 import Pin from "../models/Pin.js";
 import Like from "../models/likeModel.js";
 import Save from "../models/saveModel.js";
+import imageService from "../utils/imageKit.js";
+import { redis } from "../index.js";
+
+// Cache middleware
+const cachePin = async (id) => {
+  const cachedPin = await redis.get(`pin:${id}`);
+  if (cachedPin) return JSON.parse(cachedPin);
+  return null;
+};
+
+const setPinCache = async (id, data) => {
+  await redis.setex(`pin:${id}`, 3600, JSON.stringify(data)); // Cache for 1 hour
+};
 
 export const getAllPins = async (req, res) => {
   try {
@@ -8,41 +21,48 @@ export const getAllPins = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 12;
     const skip = (page - 1) * limit;
 
-    // Build query
-    const queryObj = { ...req.query };
-    const excludedFields = ["page", "sort", "limit", "fields"];
-    excludedFields.forEach((field) => delete queryObj[field]);
-
-    // Advanced filtering
-    let query = Pin.find(queryObj)
-      .populate("creator", "username img displayName")
-      .populate("comments.createdBy", "username img displayName");
-
-    // Sorting
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort("-createdAt");
+    // Create cache key based on query parameters
+    const cacheKey = `pins:${JSON.stringify(req.query)}`;
+    try {
+      const cachedResult = await redis.get(cacheKey);
+      if (cachedResult) {
+        return res.status(200).json(JSON.parse(cachedResult));
+      }
+    } catch (cacheError) {
+      console.error("Redis cache error:", cacheError);
+      // Continue without cache
     }
 
-    // Pagination
-    query = query.skip(skip).limit(limit);
+    // Optimize query with lean() for better performance
+    const query = Pin.find()
+      .select("media width height title description user")
+      .populate("user", "username img displayName")
+      .sort("-createdAt")
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    // Execute query
-    const [pins, total] = await Promise.all([
-      query,
-      Pin.countDocuments(queryObj),
-    ]);
+    // Execute query and count in parallel
+    const [pins, total] = await Promise.all([query, Pin.countDocuments({})]);
 
-    res.status(200).json({
+    const result = {
       status: "success",
       results: pins.length,
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       data: pins,
-    });
+    };
+
+    // Cache the result
+    try {
+      await redis.setex(cacheKey, 300, JSON.stringify(result)); // Cache for 5 minutes
+    } catch (cacheError) {
+      console.error("Redis cache error:", cacheError);
+      // Continue without cache
+    }
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({
       status: "error",
@@ -52,14 +72,20 @@ export const getAllPins = async (req, res) => {
   }
 };
 
-// @desc    Get single pin
-// @route   GET /api/v1/pins/:id
-// @access  Public
 export const getPin = async (req, res) => {
   try {
+    // Check cache first
+    const cachedPin = await cachePin(req.params.id);
+    if (cachedPin) {
+      return res.status(200).json({
+        status: "success",
+        data: cachedPin,
+      });
+    }
+
     const pin = await Pin.findById(req.params.id)
-      .populate("creator", "username img displayName")
-      .populate("comments.createdBy", "username img displayName");
+      .populate("user", "username img displayName")
+      .lean();
 
     if (!pin) {
       return res.status(404).json({
@@ -67,6 +93,8 @@ export const getPin = async (req, res) => {
         message: "Pin not found",
       });
     }
+
+    await setPinCache(req.params.id, pin);
 
     res.status(200).json({
       status: "success",
@@ -81,20 +109,46 @@ export const getPin = async (req, res) => {
   }
 };
 
-// @desc    Create new pin
-// @route   POST /api/v1/pins
-// @access  Private
 export const createPin = async (req, res) => {
   try {
-    const newPin = await Pin.create({
-      ...req.body,
-      creator: req.user._id,
-    });
+    if (!req.files || !req.files.media) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide an image file",
+      });
+    }
 
-    res.status(201).json({
-      status: "success",
-      data: newPin,
-    });
+    const file = req.files.media;
+
+    // Upload image to ImageKit using the imageService
+    try {
+      const uploadedImage = await imageService.uploadImage(file);
+
+      // Create new pin with uploaded image details
+      const newPin = await Pin.create({
+        media: uploadedImage.url,
+        width: uploadedImage.width,
+        height: uploadedImage.height,
+        title: req.body.title,
+        description: req.body.description,
+        link: req.body.link,
+        board: req.body.board || null,
+        tags: req.body.tags
+          ? req.body.tags.split(",").map((tag) => tag.trim())
+          : [],
+        user: req.user._id,
+      });
+
+      res.status(201).json({
+        status: "success",
+        data: newPin,
+      });
+    } catch (uploadError) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Error uploading image: " + uploadError.message,
+      });
+    }
   } catch (err) {
     res.status(400).json({
       status: "fail",
@@ -180,6 +234,7 @@ export const addComment = async (req, res) => {
   }
 };
 
+// Bulk operations for better performance
 export const checkInteractions = async (req, res) => {
   try {
     const pinId = req.params.id;
@@ -193,18 +248,42 @@ export const checkInteractions = async (req, res) => {
       });
     }
 
-    const [likeCount, isLiked, isSaved] = await Promise.all([
-      Like.countDocuments({ pin: pinId }),
-      Like.exists({ pin: pinId, user: userId }),
+    const cacheKey = `interactions:${pinId}:${userId}`;
+    const cachedData = await redis.get(cacheKey);
+
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+
+    // Use aggregation for better performance
+    const [likeData, saveData] = await Promise.all([
+      Like.aggregate([
+        { $match: { pin: pinId } },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            isLiked: {
+              $sum: {
+                $cond: [{ $eq: ["$user", userId] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
       Save.exists({ pin: pinId, user: userId }),
     ]);
 
-    res.status(200).json({
-      status: "success",
-      isLiked: !!isLiked,
-      isSaved: !!isSaved,
-      likeCount,
-    });
+    const result = {
+      isLiked: likeData[0]?.isLiked > 0 || false,
+      isSaved: !!saveData,
+      likeCount: likeData[0]?.count || 0,
+    };
+
+    // Cache the result
+    await redis.setex(cacheKey, 300, JSON.stringify(result));
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({
       status: "error",

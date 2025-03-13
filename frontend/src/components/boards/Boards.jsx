@@ -1,14 +1,15 @@
-import "./boards.css";
-import Image from "../image/image";
+import "./board.css";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "timeago.js";
 import { Link } from "react-router";
 import apiRequest from "../../utils/apiRequest";
+import Image from "../images/Image";
 
 const Boards = ({ userId }) => {
   const { isPending, error, data } = useQuery({
     queryKey: ["boards", userId],
-    queryFn: () => apiRequest.get(`/boards/${userId}`).then((res) => res.data),
+    queryFn: () =>
+      apiRequest.get(`/api/v1/boards/user/${userId}`).then((res) => res.data),
   });
 
   if (isPending) return "Loading...";
